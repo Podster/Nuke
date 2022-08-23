@@ -72,6 +72,7 @@ public final class VideoPlayerView: _PlatformBaseView {
     public var player: AVPlayer? {
         didSet {
             registerNotifications()
+            player?.allowsExternalPlayback = false
         }
     }
 
@@ -127,6 +128,7 @@ public final class VideoPlayerView: _PlatformBaseView {
         player.preventsDisplaySleepDuringVideoPlayback = false
         player.actionAtItemEnd = isLooping ? .none : .pause
         player.allowsExternalPlayback = false
+        
         self.player = player
 
         playerLayer.player = player
