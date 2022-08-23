@@ -69,7 +69,7 @@ public final class VideoPlayerView: _PlatformBaseView {
 
     // MARK: Private
 
-    private var player: AVPlayer? {
+    var player: AVPlayer? {
         didSet {
             registerNotifications()
         }
