@@ -126,6 +126,7 @@ public final class VideoPlayerView: _PlatformBaseView {
         player.isMuted = true
         player.preventsDisplaySleepDuringVideoPlayback = false
         player.actionAtItemEnd = isLooping ? .none : .pause
+        player.allowsExternalPlayback = false
         self.player = player
 
         playerLayer.player = player
