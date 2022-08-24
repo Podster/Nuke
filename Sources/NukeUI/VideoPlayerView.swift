@@ -128,7 +128,7 @@ public final class VideoPlayerView: _PlatformBaseView {
             let compositionTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)
             
             try! compositionTrack?.insertTimeRange(CMTimeRange(start: .zero, duration: asset.duration), of: asset_, at: .zero)
-            
+    
             let playerItem = AVPlayerItem(asset: composition)
             let player = AVQueuePlayer(playerItem: playerItem)
             player.isMuted = true
@@ -137,14 +137,16 @@ public final class VideoPlayerView: _PlatformBaseView {
             player.actionAtItemEnd = self.isLooping ? .none : .pause
             player.allowsExternalPlayback = false
             
-            self.player = player
-            
-            self.playerLayer.player = player
-            
-            self.playerObserver = player.observe(\.status, options: [.new, .initial]) { player, _ in
-                Task { @MainActor in
-                    if player.status == .readyToPlay {
-                        player.play()
+            DispatchQueue.main.async {
+                self.player = player
+                
+                self.playerLayer.player = player
+                
+                self.playerObserver = player.observe(\.status, options: [.new, .initial]) { player, _ in
+                    Task { @MainActor in
+                        if player.status == .readyToPlay {
+                            player.play()
+                        }
                     }
                 }
             }
