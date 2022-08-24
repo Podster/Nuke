@@ -123,8 +123,11 @@ public final class VideoPlayerView: _PlatformBaseView {
         }
 
         let playerItem = AVPlayerItem(asset: asset)
+        let audioMix = AVMutableAudioMix()
+        playerItem.audioMix = audioMix
         let player = AVQueuePlayer(playerItem: playerItem)
         player.isMuted = true
+        
         player.preventsDisplaySleepDuringVideoPlayback = false
         player.actionAtItemEnd = isLooping ? .none : .pause
         player.allowsExternalPlayback = false
