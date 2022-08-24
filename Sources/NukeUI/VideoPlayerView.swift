@@ -111,17 +111,10 @@ public final class VideoPlayerView: _PlatformBaseView {
         )
 #endif
     }
-    
-    var isAirplayActive: Bool {
-        let route = AVAudioSession.sharedInstance().currentRoute
-        return route.outputs.contains { $0.portType == .airPlay }
-    }
 
     public func restart() {
-        if !isAirplayActive {
             player?.seek(to: CMTime.zero)
             player?.play()
-        }
     }
 
     public func play() {
@@ -129,24 +122,30 @@ public final class VideoPlayerView: _PlatformBaseView {
             return
         }
         
-        let playerItem = AVPlayerItem(asset: asset)
-        let audioMix = AVMutableAudioMix()
-        playerItem.audioMix = audioMix
-        let player = AVQueuePlayer(playerItem: playerItem)
-        player.isMuted = true
-        
-        player.preventsDisplaySleepDuringVideoPlayback = false
-        player.actionAtItemEnd = isLooping ? .none : .pause
-        player.allowsExternalPlayback = false
-        
-        self.player = player
-        
-        playerLayer.player = player
-        
-        playerObserver = player.observe(\.status, options: [.new, .initial]) { player, _ in
-            Task { @MainActor in
-                if player.status == .readyToPlay {
-                    player.play()
+        let track = asset.loadTracks(withMediaType: .video) { assetTracks, error in
+            guard let asset_ = assetTracks?.first else { return }
+            let composition = AVMutableComposition()
+            let compositionTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)
+            
+            try! compositionTrack?.insertTimeRange(CMTimeRange(start: .zero, duration: asset.duration), of: asset_, at: .zero)
+            
+            let playerItem = AVPlayerItem(asset: composition)
+            let player = AVQueuePlayer(playerItem: playerItem)
+            player.isMuted = true
+            
+            player.preventsDisplaySleepDuringVideoPlayback = false
+            player.actionAtItemEnd = self.isLooping ? .none : .pause
+            player.allowsExternalPlayback = false
+            
+            self.player = player
+            
+            self.playerLayer.player = player
+            
+            self.playerObserver = player.observe(\.status, options: [.new, .initial]) { player, _ in
+                Task { @MainActor in
+                    if player.status == .readyToPlay {
+                        player.play()
+                    }
                 }
             }
         }
