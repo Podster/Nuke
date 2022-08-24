@@ -111,17 +111,24 @@ public final class VideoPlayerView: _PlatformBaseView {
         )
 #endif
     }
+    
+    var isAirplayActive: Bool {
+        let route = AVAudioSession.sharedInstance().currentRoute
+        return route.outputs.contains { $0.portType == .airPlay }
+    }
 
     public func restart() {
-        player?.seek(to: CMTime.zero)
-        player?.play()
+        if !isAirplayActive {
+            player?.seek(to: CMTime.zero)
+            player?.play()
+        }
     }
 
     public func play() {
         guard let asset = asset else {
             return
         }
-
+        
         let playerItem = AVPlayerItem(asset: asset)
         let audioMix = AVMutableAudioMix()
         playerItem.audioMix = audioMix
@@ -133,9 +140,9 @@ public final class VideoPlayerView: _PlatformBaseView {
         player.allowsExternalPlayback = false
         
         self.player = player
-
+        
         playerLayer.player = player
-
+        
         playerObserver = player.observe(\.status, options: [.new, .initial]) { player, _ in
             Task { @MainActor in
                 if player.status == .readyToPlay {
@@ -144,7 +151,7 @@ public final class VideoPlayerView: _PlatformBaseView {
             }
         }
     }
-
+    
     @objc private func playerItemDidPlayToEndTimeNotification(_ notification: Notification) {
         guard let playerItem = notification.object as? AVPlayerItem else {
             return
